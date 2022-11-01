@@ -43,6 +43,11 @@ class _SqliteAppState extends State<PopisNamirnica> {
                     return Center(
                       child: ListTile(
                         title: Text(namirnice.name),
+                        onLongPress: () {
+                          setState(() {
+                            DatabaseHelper.instance.remove(namirnice.id!);
+                          });
+                        },
                       ),
                     );
                   }).toList(),
@@ -118,5 +123,14 @@ class DatabaseHelper {
   Future<int> add(Namirnica namirnice) async {
     Database db = await instance.database;
     return await db.insert('popis', namirnice.toMap());
+  }
+  Future<int> remove(int id) async {
+    Database db = await instance.database;
+    return await db.delete('popis', where: 'id = ?', whereArgs: [id]);
+  }
+  Future<int> update(Namirnica namirnice) async {
+    Database db = await instance.database;
+    return await db.update('groceries', namirnice.toMap(),
+        where: "id = ?", whereArgs: [namirnice.id]);
   }
 }
