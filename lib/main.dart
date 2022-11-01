@@ -28,10 +28,36 @@ class _SqliteAppState extends State<PopisNamirnica> {
         controller: textController,
          ),
         ),
+        body: Center(
+          child: FutureBuilder<List<Namirnica>>(
+              future: DatabaseHelper.instance.getNamirnice(),
+              builder: (BuildContext context,
+                  AsyncSnapshot<List<Namirnica>> snapshot) {
+                if (!snapshot.hasData) {
+                  return Center(child: Text('Ucitavanje...'));
+                }
+                return snapshot.data!.isEmpty
+                    ? Center(child: Text('Nema namirnica u listi.'))
+                    : ListView(
+                  children: snapshot.data!.map((namirnice) {
+                    return Center(
+                      child: ListTile(
+                        title: Text(namirnice.name),
+                      ),
+                    );
+                  }).toList(),
+                );
+              }),
+        ),
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.save),
-          onPressed: () {
-            print(textController.text);
+          onPressed: () async {
+            await DatabaseHelper.instance.add(
+              Namirnica(name: textController.text),
+            );
+            setState(() {
+              textController.clear();
+            });
           },
         ),
       ),
@@ -88,5 +114,9 @@ class DatabaseHelper {
         ? namirnice.map((c) => Namirnica.fromMap(c)).toList()
         : [];
     return listanamirnica;
+  }
+  Future<int> add(Namirnica namirnice) async {
+    Database db = await instance.database;
+    return await db.insert('popis', namirnice.toMap());
   }
 }
