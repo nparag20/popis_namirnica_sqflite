@@ -19,6 +19,7 @@ class PopisNamirnica extends StatefulWidget {
 }
 
 class _SqliteAppState extends State<PopisNamirnica> {
+  int? selectedId;
   final textController = TextEditingController();
   @override
   Widget build(BuildContext context) {
@@ -43,6 +44,12 @@ class _SqliteAppState extends State<PopisNamirnica> {
                     return Center(
                       child: ListTile(
                         title: Text(namirnice.name),
+                        onTap: () {
+                          setState(() {
+                            textController.text = namirnice.name;
+                            selectedId = namirnice.id;
+                          });
+                        },
                         onLongPress: () {
                           setState(() {
                             DatabaseHelper.instance.remove(namirnice.id!);
@@ -57,11 +64,17 @@ class _SqliteAppState extends State<PopisNamirnica> {
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.save),
           onPressed: () async {
-            await DatabaseHelper.instance.add(
+            selectedId != null
+                ? await DatabaseHelper.instance.update(
+              Namirnica(id: selectedId, name: textController.text),
+            )
+
+            :await DatabaseHelper.instance.add(
               Namirnica(name: textController.text),
             );
             setState(() {
               textController.clear();
+              selectedId = null;
             });
           },
         ),
@@ -130,7 +143,7 @@ class DatabaseHelper {
   }
   Future<int> update(Namirnica namirnice) async {
     Database db = await instance.database;
-    return await db.update('groceries', namirnice.toMap(),
+    return await db.update('popis', namirnice.toMap(),
         where: "id = ?", whereArgs: [namirnice.id]);
   }
 }
